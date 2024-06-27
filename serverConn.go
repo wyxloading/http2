@@ -96,7 +96,7 @@ func (sc *serverConn) Serve() error {
 	sc.clientWindow = int64(sc.clientS.MaxWindowSize())
 
 	if sc.maxIdleTime > 0 {
-		sc.maxIdleTimer = time.AfterFunc(sc.maxIdleTime, sc.closeIdleConn)
+		sc.maxIdleTimer = time.NewTimer(sc.maxIdleTime)
 	}
 
 	defer func() {
@@ -304,6 +304,8 @@ loop:
 		select {
 		case <-sc.closer:
 			break loop
+		case <-sc.maxIdleTimer.C:
+			sc.closeIdleConn()
 		case <-sc.maxRequestTimer.C:
 			reqTimerArmed = false
 
